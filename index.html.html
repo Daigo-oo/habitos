@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker Inteligente + Consciencia 🌿</title>
+    <style>
+        /* Variables de Paleta Estética Exacta al Video */
+        :root {
+            --bg-base: #f7f7f5;
+            --bg-card: #ffffff;
+            --border-color: #e4e4e2;
+            --text-main: #1a1a1a;
+            --text-muted: #8a8a88;
+            --accent-green: #5d7a68;
+            --accent-glow: rgba(93, 122, 104, 0.15);
+            --accent-red-bg: #fff5f5;
+            --accent-red-border: #f5c2c2;
+            --accent-red-text: #b91c1c;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --transition-bounce: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-base: #121214;
+            --bg-card: #1a1a1e;
+            --border-color: #26262b;
+            --text-main: #eff0f3;
+            --text-muted: #7c7e85;
+            --accent-green: #7aa28d;
+            --accent-glow: rgba(122, 162, 141, 0.15);
+            --accent-red-bg: #2a1818;
+            --accent-red-border: #4c2323;
+            --accent-red-text: #f87171;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .greeting-section h1 {
+            font-family: var(--font-serif);
+            font-size: 2.2rem;
+            font-weight: 400;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.01em;
+        }
+
+        .greeting-section .date-sub {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 1.1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main);
+            background-color: rgba(0, 0, 0, 0.04);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .icon-btn:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Banner Semanal */
+        .week-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            transition: var(--transition-smooth);
+        }
+
+        .day-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 42px;
+            padding: 8px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition-bounce);
+        }
+
+        .day-column:hover {
+            background-color: rgba(0,0,0,0.02);
+            transform: translateY(-2px);
+        }
+
+        [data-theme="dark"] .day-column:hover {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .day-letter {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .day-number {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .day-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .day-column.active .day-number {
+            font-weight: 700;
+        }
+
+        .day-column.active .day-dot {
+            background-color: transparent;
+            border: 1.5px solid var(--accent-green);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-top: -2px;
+        }
+
+        /* Frase */
+        .quote-text {
+            font-family: var(--font-serif);
+            font-style: italic;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 2px 0;
+            text-align: left;
+        }
+
+        /* Animación de Entrada General */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mensaje de éxito "Todos completados" */
+        .success-banner {
+            font-size: 0.9rem;
+            color: var(--accent-green);
+            font-weight: 500;
+            margin-bottom: 8px;
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+
+        /* Progreso */
+        .progress-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-track {
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-green);
+            border-radius: 2px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Lista de Hábitos */
+        .habits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .habit-row-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            animation: fadeInUp 0.3s cubic-bezier(0.215, 0.610, 0.355, 1) forwards;
+            transition: var(--transition-smooth);
+        }
+
+        .habit-row-card:hover {
+            border-color: var(--text-muted);
+        }
+
+        .habit-left-zone {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        /* Checkbox circular */
+        .custom-circle-check {
+            width: 22px;
+            height: 22px;
+            border: 1px solid var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition-smooth);
+            flex-shrink: 0;
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .habit-row-card.completed .custom-circle-check {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+            animation: checkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .habit-row-card.completed .custom-circle-check::after {
+            content: "✓";
+            color: var(--bg-card);
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .habit-title-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+        }
+
+        .habit-row-card.completed .habit-title-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        /* Zona derecha */
+        .habit-right-zone {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .habit-streak-badge {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .habit-row-card.completed .habit-streak-badge {
+            opacity: 1;
+        }
+
+        .delete-trigger-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .habit-row-card:hover .delete-trigger-btn {
+            opacity: 1;
+        }
+
+        .delete-trigger-btn:hover {
+            color: #ef4444;
+        }
+
+        .habit-row-card.confirm-delete-state {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red-border);
+        }
+
+        .delete-confirm-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        .delete-confirm-label {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .delete-confirm-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-action-no {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-action-no:hover {
+            color: var(--text-main);
+        }
+
+        .btn-action-yes {
+            background: none;
+            border: none;
+            color: var(--accent-red-text);
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Entrada de texto */
+        .inline-input-box {
+            display: flex;
+            gap: 10px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--text-muted);
+            padding: 14px 18px;
+            border-radius: 14px;
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        .inline-input-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .add-trigger-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 4px;
+            width: fit-content;
+            transition: var(--transition-smooth);
+        }
+
+        .add-trigger-btn:hover {
+            color: var(--text-main);
+        }
+
+        .empty-illustration-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            padding: 40px 0;
+            text-align: center;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .empty-circle-icon {
+            width: 52px;
+            height: 52px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-muted);
+            background-color: var(--bg-card);
+            font-size: 1.1rem;
+        }
+
+        .empty-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 4px 0 0 0;
+        }
+
+        .empty-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            max-width: 280px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .primary-action-btn {
+            background-color: #5d7a68;
+            color: #ffffff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition-smooth);
+        }
+
+        [data-theme="dark"] .primary-action-btn {
+            background-color: #7aa28d;
+            color: #121214;
+        }
+
+        /* --- NUEVOS ESTILOS: BLOQUE 4 — DAILY RESET --- */
+        .daily-reset-container {
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .reset-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: -4px;
+        }
+
+        .reflection-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .reflection-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .reflection-textarea {
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+            transition: var(--transition-smooth);
+        }
+
+        .reflection-textarea:focus {
+            border-color: var(--text-muted);
+        }
+
+        /* Panel de Métricas Inferior */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+        }
+
+        .stat-mini-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px 18px;
+            transition: var(--transition-smooth);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 400;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="app-container">
+        
+        <!-- Encabezado Principal -->
+        <header>
+            <div class="greeting-section">
+                <h1 id="greetingText">Buenas noches</h1>
+                <div class="date-sub" id="fullDateText">Cargando...</div>
+            </div>
+            <div class="top-actions">
+                <button class="icon-btn">🔊</button>
+                <button class="icon-btn" id="themeToggle">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Navegación Semanal Horizontal -->
+        <div class="week-card" id="weekContainer"></div>
+
+        <!-- Frase Inspiracional -->
+        <div class="quote-text">"Las rutinas construyen el futuro."</div>
+
+        <!-- Sección de Mensaje de Éxito Ocultable -->
+        <div id="successMessageZone"></div>
+
+        <!-- Sección Dinámica: Lista o Pantalla Vacía -->
+        <div id="dynamicContentZone"></div>
+
+        <!-- NUEVO: Zona del Bloque 4 — Daily Reset -->
+        <div id="dailyResetZone" class="daily-reset-container"></div>
+
+        <!-- Panel de Métricas Inferior -->
+        <div class="stats-grid">
+            <div class="stat-mini-card">
+                <div class="stat-label">Esta semana</div>
+                <div class="stat-value" id="weeklyProgressStat">0<span class="stat-unit">%</span></div>
+            </div>
+            <div class="stat-mini-card">
+                <div class="stat-label">Mejor racha</div>
+                <div class="stat-value" id="streakStat">0<span class="stat-unit">días</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let activeDate = new Date(); 
+        
+        let habits = JSON.parse(localStorage.getItem('art_habits')) || [];
+        let tracking = JSON.parse(localStorage.getItem('art_tracking')) || {};
+        // NUEVO: Almacenamiento independiente para las preguntas de reflexión
+        let reflections = JSON.parse(localStorage.getItem('art_reflections')) || {};
+        
+        let deletingId = null; 
+        let isInputActive = false; 
+
+        const DAY_LETTERS = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+        const MONTH_LONG = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const DAY_LONG = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '⚙️' : '🌙';
+        });
+
+        function getMonday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        }
+
+        function updateHeaders() {
+            const hours = new Date().getHours();
+            let greet = "Buenas noches";
+            if (hours >= 6 && hours < 12) greet = "Buenos días";
+            else if (hours >= 12 && hours < 19) greet = "Buenas tardes";
+            
+            document.getElementById('greetingText').textContent = greet;
+            
+            const dayName = DAY_LONG[activeDate.getDay()];
+            const dayNum = activeDate.getDate();
+            const monthName = MONTH_LONG[activeDate.getMonth()];
+            document.getElementById('fullDateText').textContent = `${dayName}, ${dayNum} de ${monthName} de ${activeDate.getFullYear()}`;
+        }
+
+        function renderWeekBanner() {
+            const weekContainer = document.getElementById('weekContainer');
+            weekContainer.innerHTML = '';
+            
+            const monday = getMonday(activeDate);
+            const activeKey = formatDateKey(activeDate);
+
+            for (let i = 0; i < 7; i++) {
+                const currentDay = new Date(monday);
+                currentDay.setDate(monday.getDate() + i);
+                const currentKey = formatDateKey(currentDay);
+
+                const col = document.createElement('div');
+                col.className = `day-column ${activeKey === currentKey ? 'active' : ''}`;
+                
+                col.innerHTML = `
+                    <div class="day-letter">${DAY_LETTERS[currentDay.getDay()]}</div>
+                    <div class="day-number">${currentDay.getDate()}</div>
+                    <div class="day-dot"></div>
+                `;
+
+                col.addEventListener('click', () => {
+                    activeDate = currentDay;
+                    deletingId = null; 
+                    initApp();
+                });
+
+                weekContainer.appendChild(col);
+            }
+        }
+
+        function renderHabitsContent() {
+            const zone = document.getElementById('dynamicContentZone');
+            const successZone = document.getElementById('successMessageZone');
+            zone.innerHTML = '';
+            successZone.innerHTML = '';
+
+            if (habits.length === 0 && !isInputActive) {
+                zone.innerHTML = `
+                    <div class="empty-illustration-container">
+                        <div class="empty-circle-icon">✓</div>
+                        <h3 class="empty-title">Aún no tienes hábitos</h3>
+                        <p class="empty-desc">Añade tu primer hábito para empezar a construir consistencia, un día a la vez.</p>
+                        <button class="primary-action-btn" id="addFirstHabitBtn">+ Añadir primer hábito</button>
+                    </div>
+                `;
+                document.getElementById('addFirstHabitBtn').addEventListener('click', () => {
+                    isInputActive = true;
+                    renderHabitsContent();
+                });
+                return;
+            }
+
+            const dateKey = formatDateKey(activeDate);
+            const dayData = tracking[dateKey] || {};
+            
+            let completedCount = 0;
+            habits.forEach(h => { if(dayData[h.id]) completedCount++; });
+            const total = habits.length;
+
+            if (total > 0 && completedCount === total) {
+                successZone.innerHTML = `<div class="success-banner">Todos completados. Buen trabajo.</div>`;
+            }
+
+            let htmlStructure = `
+                <div class="progress-container">
+                    <div class="progress-labels">
+                        <span>HOY</span>
+                        <span>${completedCount} de ${total}</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" style="width: ${total > 0 ? (completedCount/total)*100 : 0}%"></div>
+                    </div>
+                </div>
+                <div class="habits-list" id="cardsListContainer"></div>
+                <div style="margin-top: 14px;" id="addButtonPlaceholder">
+                    ${isInputActive ? '' : '<button class="add-trigger-btn" onclick="activateContinuousInput()">+ Añadir hábito</button>'}
+                </div>
+            `;
+            
+            zone.innerHTML = htmlStructure;
+            const listContainer = document.getElementById('cardsListContainer');
+
+            habits.forEach((habit, index) => {
+                const card = document.createElement('div');
+                
+                if (deletingId === habit.id) {
+                    card.className = "habit-row-card confirm-delete-state";
+                    card.innerHTML = `
+                        <div class="delete-confirm-container">
+                            <span class="delete-confirm-label">¿Eliminar este hábito?</span>
+                            <div class="delete-confirm-actions">
+                                <button class="btn-action-no" onclick="cancelDelete(event)">No</button>
+                                <button class="btn-action-yes" onclick="confirmDelete(event, '${habit.id}')">Si, eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const isChecked = dayData[habit.id] ? 'completed' : '';
+                    card.className = `habit-row-card ${isChecked}`;
+                    card.style.animationDelay = `${index * 0.03}s`;
+                    
+                    card.innerHTML = `
+                        <div class="habit-left-zone" onclick="toggleHabitCheck('${habit.id}')">
+                            <div class="custom-circle-check"></div>
+                            <span class="habit-title-text">${habit.text}</span>
+                        </div>
+                        <div class="habit-right-zone">
+                            <div class="habit-streak-badge">⏱️ 1</div>
+                            <button class="delete-trigger-btn" onclick="triggerDeleteState(event, '${habit.id}')">×</button>
+                        </div>
+                    `;
+                }
+
+                listContainer.appendChild(card);
+            });
+
+            if (isInputActive) {
+                const inputBox = document.createElement('div');
+                inputBox.className = "inline-input-box";
+                inputBox.innerHTML = `
+                    <input type="text" id="newHabitTitle" placeholder="${habits.length === 0 ? 'Leer 20 minutos...' : 'Nombre del hábito...'}" autofocus>
+                `;
+                listContainer.appendChild(inputBox);
+
+                const input = document.getElementById('newHabitTitle');
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const val = input.value.trim();
+                        if (val) {
+                            habits.push({ id: 'h_' + Date.now(), text: val });
+                            localStorage.setItem('art_habits', JSON.stringify(habits));
+                            renderHabitsContent();
+                            calculateStats();
+                        } else {
+                            isInputActive = false;
+                            initApp();
+                        }
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        if (!input.value.trim()) {
+                            isInputActive = false;
+                            initApp();
+                        }
+                    }, 180);
+                });
+            }
+        }
+
+        // NUEVA FUNCIÓN: Renderizado y autoguardado dinámico del Daily Reset
+        function renderDailyReset() {
+            const zone = document.getElementById('dailyResetZone');
+            const dateKey = formatDateKey(activeDate);
+            
+            // Si no existen respuestas previas para esta fecha, inicializar limpias
+            const dayData = reflections[dateKey] || { q1: '', q2: '', q3: '' };
+
+            zone.innerHTML = `
+                <div class="reset-title">Bloque 4 — Daily Reset</div>
+                
+                <div class="reflection-group">
+                    <label class="reflection-label">¿Qué hice bien?</label>
+                    <textarea class="reflection-textarea" id="reflectQ1" rows="2" placeholder="Reflexiona sobre tus logros de hoy...">${dayData.q1 || ''}</textarea>
+                </div>
+
+                <div class="reflection-group">
+                    <label class="reflection-label">¿Qué me distrajo?</label>
+                    <textarea class="reflection-textarea" id="reflectQ2" rows="2" placeholder="Identifica los obstáculos o ladrones de tiempo...">${dayData.q2 || ''}</textarea>
+                </div>
+
+                <div class="reflection-group">
+                    <label class="reflection-label">¿Qué haré mañana sí o sí?</label>
+                    <textarea class="reflection-textarea" id="reflectQ3" rows="2" placeholder="Define tu prioridad absoluta para mañana...">${dayData.q3 || ''}</textarea>
+                </div>
+            `;
+
+            // Asignar listeners para capturar la escritura de forma nativa e instantánea
+            ['reflectQ1', 'reflectQ2', 'reflectQ3'].forEach((id, index) => {
+                const inputEl = document.getElementById(id);
+                inputEl.addEventListener('input', () => {
+                    if (!reflections[dateKey]) {
+                        reflections[dateKey] = { q1: '', q2: '', q3: '' };
+                    }
+                    reflections[dateKey][`q${index + 1}`] = inputEl.value;
+                    localStorage.setItem('art_reflections', JSON.stringify(reflections));
+                });
+            });
+        }
+
+        window.activateContinuousInput = function() {
+            isInputActive = true;
+            renderHabitsContent();
+        }
+
+        window.toggleHabitCheck = function(id) {
+            const dateKey = formatDateKey(activeDate);
+            if (!tracking[dateKey]) tracking[dateKey] = {};
+            tracking[dateKey][id] = !tracking[dateKey][id];
+            
+            localStorage.setItem('art_tracking', JSON.stringify(tracking));
+            initApp();
+        }
+
+        window.triggerDeleteState = function(e, id) {
+            e.stopPropagation();
+            deletingId = id;
+            renderHabitsContent();
+        }
+
+        window.cancelDelete = function(e) {
+            e.stopPropagation();
+            deletingId = null;
+            renderHabitsContent();
+        }
+
+        window.confirmDelete = function(e, id) {
+            e.stopPropagation();
+            habits = habits.filter(h => h.id !== id);
+            localStorage.setItem('art_habits', JSON.stringify(habits));
+            deletingId = null;
+            initApp();
+        }
+
+        function calculateStats() {
+            if (habits.length === 0) {
+                document.getElementById('weeklyProgressStat').innerHTML = `0<span class="stat-unit">%</span>`;
+                document.getElementById('streakStat').innerHTML = `0<span class="stat-unit">días</span>`;
+                return;
+            }
+
+            const monday = getMonday(activeDate);
+            let totalSlots = 7 * habits.length;
+            let checkedSlots = 0;
+
+            for(let i=0; i<7; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                const k = formatDateKey(d);
+                if(tracking[k]) {
+                    habits.forEach(h => { if(tracking[k][h.id]) checkedSlots++; });
+                }
+            }
+
+            const percentage = Math.round((checkedSlots / totalSlots) * 100);
+            document.getElementById('weeklyProgressStat').innerHTML = `${percentage}<span class="stat-unit">%</span>`;
+
+            let streak = 0;
+            let checkDate = new Date();
+            
+            while(true) {
+                const k = formatDateKey(checkDate);
+                let dayDone = false;
+                if(tracking[k]) {
+                    habits.forEach(h => { if(tracking[k][h.id]) dayDone = true; });
+                }
+                if(dayDone) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+                if(streak > 365) break;
+            }
+            document.getElementById('streakStat').innerHTML = `${streak}<span class="stat-unit">días</span>`;
+        }
+
+        function initApp() {
+            updateHeaders();
+            renderWeekBanner();
+            renderHabitsContent();
+            renderDailyReset(); // Ejecutar el bloque de preguntas en sincronía
+            calculateStats();
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
